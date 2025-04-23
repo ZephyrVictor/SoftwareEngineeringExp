@@ -17,6 +17,7 @@ import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.nio.file.Files;
@@ -232,21 +233,37 @@ public class WordGraphApp extends JFrame {
 
         jgxAdapter = new JGraphXAdapter<>(graph);
 
-        // 设置边标签为权重
+        // 1. 设置边标签（权重）
         for (DefaultWeightedEdge e : graph.edgeSet()) {
             String label = String.format("%.1f", graph.getEdgeWeight(e));
             jgxAdapter.getEdgeToCellMap().get(e).setValue(label);
         }
 
-        mxCircleLayout layout = new mxCircleLayout(jgxAdapter);
+        // 2. 使用有机布局（适合大图）
+        com.mxgraph.layout.mxIGraphLayout layout = new com.mxgraph.layout.mxFastOrganicLayout(jgxAdapter);
         layout.execute(jgxAdapter.getDefaultParent());
 
+        // 3. 在图面板中展示
         graphPanel.removeAll();
-        graphPanel.add(new mxGraphComponent(jgxAdapter), BorderLayout.CENTER);
+        mxGraphComponent graphComponent = new mxGraphComponent(jgxAdapter);
+        graphPanel.add(graphComponent, BorderLayout.CENTER);
         graphPanel.revalidate();
+        graphPanel.repaint();
 
-        log("有向图已展示（边权重已标注）。");
+        log("有向图已展示（自动布局 + 权重标签）。");
+
+        // 4. 生成 PNG 并写入当前目录
+        try {
+            BufferedImage image = com.mxgraph.util.mxCellRenderer.createBufferedImage(
+                    jgxAdapter, null, 1, Color.WHITE, true, null);
+            File file = new File("graph_output.png");
+            javax.imageio.ImageIO.write(image, "PNG", file);
+            log("图已保存为：" + file.getAbsolutePath());
+        } catch (Exception e) {
+            log("保存图像失败：" + e.getMessage());
+        }
     }
+
 
 
     /** 3. 查询桥接词 **/
@@ -579,6 +596,4 @@ public class WordGraphApp extends JFrame {
             return "The bridge words from \"" + w1 + "\" to \"" + w2 + "\" are: " + list + ".";
         }
     }
-
-
 }
