@@ -39,52 +39,6 @@ public class WordGraphApp extends JFrame {
 
 
     /**
-     * 手写 PageRank（不做 dangling 重分配，跳转只在有出度节点之间）
-     * @param d         阻尼因子
-     * @param maxIter   最大迭代次数
-     * @return          每个顶点的 PR 值
-     */
-    private Map<String, Double> computePageRankManual(double d, int maxIter) {
-        // 1. 收集所有顶点，并找出非 dangling（out>0）顶点集
-        Set<String> V = graph.vertexSet();
-        List<String> nonSinks = V.stream()
-                .filter(u -> !graph.outgoingEdgesOf(u).isEmpty())
-                .collect(Collectors.toList());
-        int Nprime = nonSinks.size();
-
-        // 2. 初始化：均匀分布 over 全集 V
-        Map<String, Double> pr = new HashMap<>();
-        double init = 1.0 / V.size();
-        for (String u : V) {
-            pr.put(u, init);
-        }
-
-        // 3. 迭代
-        for (int iter = 0; iter < maxIter; iter++) {
-            Map<String, Double> next = new HashMap<>();
-            // 对每个 u 计算新 PR
-            for (String u : V) {
-                // teleport（跳转）项：只分给非 dangling 顶点
-                double teleport = (1 - d) / Nprime;
-
-                // 收敛累积项 ∑_{v→u} PR(v)/L(v)
-                double sum = 0;
-                for (DefaultWeightedEdge e : graph.incomingEdgesOf(u)) {
-                    String v = graph.getEdgeSource(e);
-                    int out = graph.outgoingEdgesOf(v).size();
-                    if (out > 0) {
-                        sum += pr.get(v) / out;
-                    }
-                }
-
-                next.put(u, teleport + d * sum);
-            }
-            pr = next;
-        }
-        return pr;
-    }
-
-    /**
      * 用 TF 统计作为初始 PR 分布
      * @param d       阻尼因子
      * @param maxIter 迭代次数
@@ -400,6 +354,43 @@ public class WordGraphApp extends JFrame {
     }
 
 
+    private Map<String, Double> computePageRankManual(double d, int maxIter) {
+        Set<String> V = graph.vertexSet();
+        int N = V.size();
+
+        // 初始 PR：均匀分布
+        Map<String, Double> pr = new HashMap<>();
+        for (String u : V) {
+            pr.put(u, 1.0 / N);
+        }
+
+        for (int iter = 0; iter < maxIter; iter++) {
+            Map<String, Double> next = new HashMap<>();
+            double sinkPR = 0.0;  // 总的 sink 节点 PR
+
+            // 先累加所有 sink 节点的当前 PR
+            for (String u : V) {
+                if (graph.outgoingEdgesOf(u).isEmpty()) {
+                    sinkPR += pr.get(u);
+                }
+            }
+
+            // 对每个节点重新计算 PR
+            for (String u : V) {
+                double sum = 0.0;
+                for (DefaultWeightedEdge e : graph.incomingEdgesOf(u)) {
+                    String v = graph.getEdgeSource(e);
+                    int out = graph.outgoingEdgesOf(v).size();
+                    if (out > 0) {
+                        sum += pr.get(v) / out;
+                    }
+                }
+                next.put(u, (1 - d) / N + d * (sum + sinkPR / N));
+            }
+            pr = next;
+        }
+        return pr;
+    }
 
 
     /** 7. 随机游走 **/
@@ -596,4 +587,5 @@ public class WordGraphApp extends JFrame {
             return "The bridge words from \"" + w1 + "\" to \"" + w2 + "\" are: " + list + ".";
         }
     }
+
 }
