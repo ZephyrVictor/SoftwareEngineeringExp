@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class WordGraphAppTest {
 
     static WordGraphApp app;
-
+// this is C4 branch
     @BeforeAll
     static void setup() throws Exception {
         app = new WordGraphApp();
