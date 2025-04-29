@@ -251,7 +251,7 @@ public class WordGraphApp extends JFrame {
             log("No bridge words from \"" + w1 + "\" to \"" + w2 + "\"");
         } else {
 //            log("Bridge words: " + String.join(", ", bridges));
-            log("No bridge words from \"" + w1 + "\" to \"" + w2 + " \"" +"is :\"" + String.join(", ", bridges) + "\"" );
+            log("The bridge words from \"" + w1 + "\" to \"" + w2 + " \"" +"is :\"" + String.join(", ", bridges) + "\"" );
         }
 
     }
