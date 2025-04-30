@@ -26,7 +26,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
-
+// git实验的测试
 public class WordGraphApp extends JFrame {
     Graph<String, DefaultWeightedEdge> graph;
     private JGraphXAdapter<String, DefaultWeightedEdge> jgxAdapter;
